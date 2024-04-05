@@ -10,7 +10,7 @@
 - **UI:** [streamlit](https://streamlit.io) 
 
 **Team:**
-- Aleksandr Semikrasov
+- Aleksandr Semikras
 - Islam Yusupov
 - Ilya Galyukshev
 - Boris Matsakov
