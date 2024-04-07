@@ -1,5 +1,5 @@
 import re
-from typing import Hashable, Iterable, Self
+from typing import Hashable, Iterable
 
 import nltk
 import numpy as np
@@ -11,7 +11,7 @@ nltk.download("stopwords")
 
 
 class Normalizer(BaseEstimator):
-    def __init__(self, lang: str = "english") -> Self:
+    def __init__(self, lang: str = "english"):
         self.stop_words = set(stopwords.words(lang))
         self.lang = lang
         if lang == "english":
@@ -55,7 +55,8 @@ class LengthScaler(BaseEstimator):
             X = X.toarray()
 
         return (X.T / (np.sum(X, axis=1).T + 1e-20)).T
-    
+
+
 class ToArray(BaseEstimator):
     def fit(self, x, y):
         return self
