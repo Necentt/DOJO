@@ -6,13 +6,17 @@ import numpy as np
 from nltk.corpus import stopwords
 from pandas import Series
 from sklearn.base import BaseEstimator
+from nltk.stem.snowball import SnowballStemmer
 
 nltk.download("stopwords")
 
 
 class Normalizer(BaseEstimator):
-    def __init__(self, lang: str = "english"):
-        self.stop_words = set(stopwords.words(lang))
+    def __init__(self, lang: str = "english", use_stemming=False, remove_stopwords=True):
+        if remove_stopwords:
+            self.stop_words = set(stopwords.words(lang))
+        else:
+            self.stop_words = {}
         self.lang = lang
         if lang == "english":
             self.pattern = r"[^a-z]"
@@ -21,6 +25,11 @@ class Normalizer(BaseEstimator):
         else:
             print("Unknown language")
             self.pattern = None
+
+        self.use_stemming = use_stemming
+
+        if use_stemming:
+            self.stemmer = SnowballStemmer(lang)
 
     def specify_stop_words(self, stop_words: Iterable[Hashable]) -> None:
         self.stop_words = stop_words
@@ -32,7 +41,11 @@ class Normalizer(BaseEstimator):
         line = line.lower()
         if self.pattern is not None:
             line = re.sub(self.pattern, " ", line)
-        word_list = [x for x in line.split() if x not in self.stop_words]
+        
+        if self.use_stemming:     
+            word_list = [self.stemmer.stem(x) for x in line.split() if x not in self.stop_words]
+        else:
+            word_list = [x for x in line.split() if x not in self.stop_words]
 
         return " ".join(word_list)
 
