@@ -11,7 +11,7 @@ import src.config as config
 
 
 def build_flat(dim, build_data):
-    n = 1024
+    n = int(2 * np.sqrt(len(build_data)))
     index = faiss.IndexIVFFlat(
         faiss.IndexFlatL2(dim), dim, n, faiss.METRIC_INNER_PRODUCT
     )
@@ -44,65 +44,29 @@ class CorpusBuilder:
 
 
 class CorpusSearcher:
-    def __init__(self, dintance_func: str|Callable[[str, str], float]="cosine"):
+    def __init__(self):
         self.corpus = np.array(utils.load_model(config.CORPUS_PATH))
         self.vectorizer = utils.load_model(config.CORPUS_VECTORIZER_PATH)
         self.index = utils.load_model(config.INDEX_PATH)
-        self.index.nprobe = 16
+        self.index.nprobe = 25
 
-    def _find_k_neib(self, data: Sequence[str], k: int = 50) -> Sequence[Sequence[int]]:
+    def _find_k_neib(self, data: Sequence[str], k: int = 25) -> Sequence[Sequence[int]]:
         data = self.vectorizer.transform(data)
         distances, indexes = self.index.search(data, k)
-        return 
+        return distances, indexes
 
-    def _best_candidate(self, x, candidates: Sequence[str]):
-        distances = np.vectorize(lambda y: distance(x, y))(candidates)
+    def _best_candidate(self, distances, candidates: Sequence[str]):
         idx = np.argmin(distances)
-        return candidates[idx]
+        return distances[idx], candidates[idx]
 
-    def find(self, data: Sequence[str]):
+    def find(self, data: Sequence[str], k: int=5):
         data = np.array(data)
-        distances, indexes = self._find_k_neib(data)
+        distances, indexes = self._find_k_neib(data, k)
         result = []
-        for x, idx in zip(data, indexes):
+        for x, dst, idx in zip(data, distances, indexes):
             candidates = self.corpus[idx]
-            result.append(self._best_candidate(x, candidates))
+            result.append(self._best_candidate(dst, candidates))
         return result
-
-
-class CorpusReplacer:
-    def __init__(self):
-        self.searcher = CorpusSearcher()
-        self.corpus = set(utils.load_model(config.CORPUS_PATH))
-
-    def _build_sequence(self, seq=Sequence[str]) -> Sequence[str]:
-        result = seq.copy()
-        missing = []
-        missing_words = []
-
-        for i, word in enumerate(seq):
-            if word not in self.corpus:
-                missing.append(i)
-                missing_words.append(word)
-
-        if len(missing) == 0:
-            return result
-
-        replacing_words = self.searcher.find(missing_words)
-
-        for i, word in enumerate(replacing_words):
-            result[missing[i]] = word
-
-        return result
-
-    def fit(self, x, y) -> Self:
-        return self
-
-    def transform(self, data: Sequence[Sequence[str]]) -> Sequence[Sequence[str]]:
-        if isinstance(data, pd.Series):
-            return data.apply(self._build_sequence)
-        else:
-            return [self._build_sequence(x) for x in data]
 
 
 class FairSearch:
