@@ -1,5 +1,3 @@
 CORPUS_PATH = "corpus.pt"
-CHAR_NGRAM_PATH = "char_grams.pt"
+CORPUS_VECTORIZER_PATH = "corpus_vectorizer.pt"
 INDEX_PATH = "index.pt"
-MAIN_CORPUS_PATH = "w2v_corpus.pt"
-PRIORITY_PATH = "priority.pt"

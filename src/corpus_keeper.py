@@ -1,5 +1,5 @@
 from Levenshtein import distance
-from typing import Sequence, Self
+from typing import Sequence, Self, Callable
 from src.transform import LengthScaler
 import src.utils as utils
 import numpy as np
@@ -8,6 +8,7 @@ import faiss
 from sklearn.pipeline import Pipeline
 
 import src.config as config
+
 
 def build_flat(dim, build_data):
     n = 1024
@@ -19,44 +20,40 @@ def build_flat(dim, build_data):
 
     return index
 
+
 class CorpusBuilder:
-    def __init__(self):
-        self.vectorizer = utils.load_model(config.CHAR_NGRAM_PATH)
+    def __init__(self, vectorizer):
+        """
+        vectorizer: CountVectorizer
+        """
+        self.vectorizer = Pipeline(
+            [("vectorizer", vectorizer), ("scaler", LengthScaler())]
+        )
 
-        self.main_corpus = utils.load_model(config.MAIN_CORPUS_PATH)
+    def create_corpus(self, dataset: Sequence[str]):
+
+        self.corpus = dataset.copy()
+        X = self.vectorizer.fit_transform(self.corpus)
         self.ngram_num = len(self.vectorizer["vectorizer"].vocabulary_)
-        self.corpus = np.array(self.main_corpus)
-        self.main_corpus = set(self.main_corpus)
 
-    def create_corpus(self, inner_dataset: Sequence[str]|None):
-        if inner_dataset is not None:
-            self.priorities = np.zeros(len(self.corpus))
-            counts = {key: val for key, val in zip(*np.unique(inner_dataset, return_counts=True))}
-            for idx, word in enumerate(self.corpus):
-                if word in counts:
-                    self.priorities[idx] = counts[word]
-
-            sorted_args = np.argsort(self.priorities)[::-1]
-            self.corpus = self.corpus[sorted_args]
-            self.priorities = self.priorities[sorted_args]
-
-        X = self.vectorizer.transform(self.corpus)
         self.index = build_flat(self.ngram_num, X)
 
         utils.save_model_compressed(self.index, config.INDEX_PATH, 9)
         utils.save_model_compressed(self.corpus, config.CORPUS_PATH, 9)
+        utils.save_model_compressed(self.vectorizer, config.CORPUS_VECTORIZER_PATH, 9)
 
 
 class CorpusSearcher:
-    def __init__(self):
+    def __init__(self, dintance_func: str|Callable[[str, str], float]="cosine"):
         self.corpus = np.array(utils.load_model(config.CORPUS_PATH))
-        self.vectorizer = utils.load_model(config.CHAR_NGRAM_PATH)
+        self.vectorizer = utils.load_model(config.CORPUS_VECTORIZER_PATH)
         self.index = utils.load_model(config.INDEX_PATH)
-        self.index.nprobe=16
+        self.index.nprobe = 16
 
     def _find_k_neib(self, data: Sequence[str], k: int = 50) -> Sequence[Sequence[int]]:
         data = self.vectorizer.transform(data)
-        return np.sort(self.index.search(data, k)[1])
+        distances, indexes = self.index.search(data, k)
+        return 
 
     def _best_candidate(self, x, candidates: Sequence[str]):
         distances = np.vectorize(lambda y: distance(x, y))(candidates)
@@ -65,7 +62,7 @@ class CorpusSearcher:
 
     def find(self, data: Sequence[str]):
         data = np.array(data)
-        indexes = self._find_k_neib(data)
+        distances, indexes = self._find_k_neib(data)
         result = []
         for x, idx in zip(data, indexes):
             candidates = self.corpus[idx]
@@ -106,7 +103,7 @@ class CorpusReplacer:
             return data.apply(self._build_sequence)
         else:
             return [self._build_sequence(x) for x in data]
-        
+
 
 class FairSearch:
     def __init__(self):

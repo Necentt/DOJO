@@ -12,7 +12,9 @@ nltk.download("stopwords")
 
 
 class Normalizer(BaseEstimator):
-    def __init__(self, lang: str = "english", use_stemming=False, remove_stopwords=True):
+    def __init__(
+        self, lang: str = "english", use_stemming=False, remove_stopwords=True
+    ):
         if remove_stopwords:
             self.stop_words = set(stopwords.words(lang))
         else:
@@ -42,9 +44,11 @@ class Normalizer(BaseEstimator):
         line = line.lower()
         if self.pattern is not None:
             line = re.sub(self.pattern, " ", line)
-        
-        if self.use_stemming:     
-            word_list = [self.stemmer.stem(x) for x in line.split() if x not in self.stop_words]
+
+        if self.use_stemming:
+            word_list = [
+                self.stemmer.stem(x) for x in line.split() if x not in self.stop_words
+            ]
         else:
             word_list = [x for x in line.split() if x not in self.stop_words]
 
