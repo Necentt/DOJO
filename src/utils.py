@@ -3,6 +3,9 @@ import joblib
 import re
 import string
 import numpy as np
+import sys 
+
+sys.path.append('..')
 
 german_pattern = re.compile(r"([äöüß]+| auf | geht | ich | ist | die )", re.UNICODE)
 english_etalon = set(string.ascii_lowercase)

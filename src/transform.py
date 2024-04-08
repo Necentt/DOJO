@@ -27,6 +27,7 @@ class Normalizer(BaseEstimator):
             self.pattern = None
 
         self.use_stemming = use_stemming
+        self.remove_stopwords = remove_stopwords
 
         if use_stemming:
             self.stemmer = SnowballStemmer(lang)
