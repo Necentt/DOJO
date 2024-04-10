@@ -31,3 +31,21 @@ def is_german(line):
     line = line.lower()
     res = german_pattern.search(line)
     return res is not None
+
+
+def hf_model():
+    from transformers import AutoTokenizer, AutoModelForSequenceClassification, pipeline
+    import torch
+
+    tokenizer = AutoTokenizer.from_pretrained("ProtectAI/deberta-v3-base-prompt-injection")
+    model = AutoModelForSequenceClassification.from_pretrained("ProtectAI/deberta-v3-base-prompt-injection")
+    classifier = pipeline(
+        "text-classification",
+        model=model,
+        tokenizer=tokenizer,
+        truncation=True,
+        max_length=512,
+        device=torch.device("cuda" if torch.cuda.is_available() else "cpu"),
+    )
+
+    return classifier
