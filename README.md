@@ -1,5 +1,7 @@
 ## General info
+
 ****
+
 **Title:** DOJOp - Detecting of jailbreaks of prompt
 
 **Main idea:** A protective layer for LM that will detect jailbreaks
@@ -17,5 +19,12 @@
 - Mentor: Grigory Karunas
 
 ### Repo structure
-
-* folder `data` - dataset LLMs jailbreak prompts
+* main branch 
+  * folder `data` - dataset LLMs jailbreak prompts 
+  * folder `UI` - streamlit chatbot UI
+  * folder `hf_model` - test with fain-tuned hf model
+  * folder `src` - future module
+* other branch
+  * dev-ilya - fine-tuned model
+  * dev-shaen - fast and simple solution
+  * dev-necentt - all tests for main branch
