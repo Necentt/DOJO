@@ -6,6 +6,8 @@
 
 **Main idea:** A protective layer for LM that will detect jailbreaks
 
+**HF link:** [ft-distil-bert](https://huggingface.co/Necent/distilbert-base-uncased-detected-jailbreak)
+
 ### Technologies Used
 - **Programming Language:** Python
 - **ML:** ...
